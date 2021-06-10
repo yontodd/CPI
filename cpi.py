@@ -1,20 +1,13 @@
-# -*- coding: utf-8 -*-
-
-# Input consensus estimates:
-
-# Current month consensus estimates:
-
-rpt_list = ["Headline CPI", "Annualized CPI", "Core CPI (ex. food and energy)", "Annualized Core"]
-estimate = [0.4, 4.6, 0.4, 3.3]
-
-# No revisions for CPI, right???  -- prior_unrevised = [0.8, 4.2, 0.9, 3.0]
-
-"""# Code: API pull from BLS, tables, print statements"""
-
 import pandas as pd
 import numpy as np
 import requests
 
+#Current month consensus estimates:
+
+rpt_list = ["Headline CPI", "Annualized CPI", "Core CPI (ex. food and energy)", "Annualized Core"]
+estimate = [0.4, 4.6, 0.4, 3.4]
+
+# API pull from BLS
 def rpt(report_series, report_name):
   print(report_name)
   print()
@@ -32,31 +25,32 @@ def rpt(report_series, report_name):
   data["value"] = pd.to_numeric(data["value"])
   data["CPI"] = np.round(data["value"].pct_change(periods = -1) * 100, 1)
   data["m/m_chg"] = data["CPI"].diff(periods = -1)
-  data["CPI annualized"] = np.round(data["value"].pct_change(periods = -12) * 100, 1)
+  data["CPI annualized"] = np.round(data["value"].pct_change(periods = -13) * 100, 1)
   data["y/y_chg"] = data["CPI annualized"].diff(periods = -1)
   data["m/m vs prior"] = np.where(data["m/m_chg"] == 0, "unchanged", np.where(data["m/m_chg"] > 0, "up", "down"))
   data["y/y vs prior"] = np.where(data["y/y_chg"] == 0, "unchanged", np.where(data["y/y_chg"] > 0, "up", "down"))
   #data = data[0:13]
   return data
 
+# Reports
 headline = rpt("CUSR0000SA0", "All items in U.S. city average, all urban consumers, seasonally adjusted")
+headline_annualized = rpt("CUUR0000SA0", "All items in U.S. city average, all urban consumers, not seasonally adjusted")
 core = rpt("CUSR0000SA0L1E", "All items less food and energy in U.S. city average, all urban consumers, seasonally adjusted")
+core_annualized = rpt("CUUR0000SA0L1E", "All items less food and energy in U.S. city average, all urban consumers, not seasonally adjusted")
 
+# Table for current month report 
 m = [headline["periodName"][0], headline["periodName"][0], core["periodName"][0], core["periodName"][0]]
 y = [headline["year"][0], headline["year"][0], core["year"][0], core["year"][0]]
-current_month = [headline["CPI"][0], headline["CPI annualized"][0], core["CPI"][0], core["CPI annualized"][0]]
+current_month = [headline["CPI"][0], headline_annualized["CPI annualized"][0], core["CPI"][0], core_annualized["CPI annualized"][0]]
 
 df2 = pd.DataFrame(zip(y, m, rpt_list, current_month, estimate), columns=["year", "month", "report", "CPI", "estimate"])
 
-df2["vs_consensus"] = np.where(df2["estimate"] == df2["CPI"], "in line with", np.where(df2["CPI"] > df2["estimate"], "beat", "missed"))
+df2["vs_consensus"] = np.where(df2["estimate"] == df2["CPI"], "in line with", np.where(df2["CPI"] > df2["estimate"], "above", "below"))
 df2["prior_month"] = [headline["periodName"][1], headline["periodName"][1], core["periodName"][1], core["periodName"][1]]
-df2["prior"] = [headline["CPI"][1], headline["CPI annualized"][1], core["CPI"][1], core["CPI annualized"][1]]
+df2["prior"] = [headline["CPI"][1], headline_annualized["CPI annualized"][1], core["CPI"][1], core_annualized["CPI annualized"][1]]
 df2["rose/fell"] = np.where(df2["CPI"] == df2["prior"], "unchanged from", np.where(df2["CPI"] > df2["prior"], "up from", "down from"))
 
-# Use this instead if monthly revisions are needed:
-# df2 = pd.DataFrame(zip(y, m, rpt_list, current_month, prior_unrevised, estimate), columns=["year", "month", "report", "CPI", "prior_unrevised", "estimate"])
-
-# Print statements
+# Print statements - compare to consensus estimates and prior month
 
 def print_statements():
   for i in range(0,len(df2)):
@@ -70,21 +64,18 @@ def print_statements():
       df2["prior_month"][i],
       df2["prior"][i]))
 
-"""# Current report
-
-Note: Since CPI formula was changed in Jan-19, we can't get annualized comparisons from before Jan-21
-"""
-
+# Current report
 print_statements()
-
 df2 # Table for just this month's data
 
-headline
+# Tables
+headline # Seasonally adjusted
+headline_annualized # Not seasonally adjusted
+core # Seasonally adjusted
+core_annualized # Not seasonally adjusted
 
-core
-
+# Current month's components
 # Table of each of the components, sorted from high to low?
-tables = pd.read_excel("https://www.bls.gov/cpi/tables/supplemental-files/cpi-u-202104.xlsx")
-tables = pd.DataFrame(tables)
-
+tables = pd.read_html("https://www.bls.gov/news.release/cpi.t01.htm")
+tables = pd.DataFrame(tables[0])
 tables
