@@ -4,6 +4,9 @@
 [Bureau of Labor Statistics - Consumer Price Index](https://www.bls.gov/cpi)
 
 Update - June 11, 2021
+- Modularize code to pull BLS data more broadly
+
+Update - June 11, 2021
 - Correctly pulls annualized data (which is non-seasonally adjusted y/y)
 - Added current month's subcomponents
 
