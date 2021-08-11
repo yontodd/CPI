@@ -1,3 +1,5 @@
+import pandas as pd
+import numpy as np
 import requests
 import credentials
 
@@ -9,13 +11,12 @@ def bls_rpt(report_series, report_name):
   
   # URL for BLS
   base_url = 'https://api.bls.gov/publicAPI/v1/timeseries/data/'
-  # API key stored in credentials.py
-  key = "?registrationkey={}".format(credentials.api_key)
+  
   # report series
   series = {'id':report_series,
           'name':report_name}
   
-  data_url = '{}{}{}'.format(key,base_url,series['id'])
+  data_url = '{}{}'.format(base_url,series['id'])
   print(data_url)
   
   raw_data = requests.get(data_url).json()
