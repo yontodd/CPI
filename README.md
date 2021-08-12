@@ -3,7 +3,7 @@
 ## Monthly CPI data from Bureau of Labor Statistics (BLS)
 [Bureau of Labor Statistics - Consumer Price Index](https://www.bls.gov/cpi)
 
-Update - June 11, 2021
+Update - August 11, 2021
 - Modularize code to pull BLS data more broadly
 
 Update - June 11, 2021
